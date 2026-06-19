@@ -1,0 +1,135 @@
+services:
+  api-gateway:
+    image: nginx:latest
+    container_name: api-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      user-service:
+        condition: service_healthy
+      item-service:
+        condition: service_healthy
+      swap-service:
+        condition: service_healthy
+    restart: unless-stopped
+
+
+  user-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: user_db
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d user_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+
+  swap-service:
+    build:
+      context: ./swap-service
+      dockerfile: Dockerfile
+
+    ports:
+      - "8002:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ITEM_SERVICE_BASE=http://item-service:8000 
+    depends_on:
+      redis:
+        condition: service_healthy
+      item-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  
+  item-service:
+    build:
+      context: ./item-service
+      dockerfile: Dockerfile
+
+    ports:
+      - "8001:8000"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - USER_SERVICE_BASE=http://user-service:8000
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+
+    ports:
+      - 8000
+  
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+# ---------------------------------------------
+    # ADD THIS BLOCK (to wait for the database)
+    # ---------------------------------------------
+    depends_on:
+      redis:
+        condition: service_healthy
+      user-db: #database
+        condition: service_healthy
+  # ---------------------------------------------
+    #  BLOCK (to wait for the database)
+    # ---------------------------------------------
+
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  redis: 
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    volumes: 
+        - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  redis-data: 
+  user-db-data:
+
+
