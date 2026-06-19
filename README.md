@@ -1,83 +1,118 @@
+# Sustainable Fashion Swapping
 
-NO NGINX YET 
-Still Need to seperate the pytandic models into the models file. 
+A microservices-based platform that lets users post and swap secondhand clothing within their community — encouraging sustainable consumption through item exchange instead of disposal.
 
-Sustainable Fashion Swapping 
+## System Overview
 
-Github: https://github.com/ellieelehmann/Sustainable-Fashion-Swapping
+The system is split into three independent services, each with its own health check endpoint, orchestrated together with Docker Compose behind an NGINX API gateway.
 
-System Purpose: This Microservice allows users to post and swap secondhand items within their community. It promotes sustainable consumption by encouraging item exchange and tracks system health across services. 
+| Service | Responsibility |
+|---|---|
+| **user-service** | User registration and profile management |
+| **item-service** | Listing, searching, and removing clothing items available for swap |
+| **swap-service** | Creating and tracking swap requests between users |
 
-Architecture Overview 
-user-service: handles user registration and profile. 
-Endpoints: 
-Data: user name, email, location, item preference 
-POST/users (create user profile) 
-GET/users/{user_id} (get user details) 
-GET/health (service health) 
+## Tech Stack
 
-item-service: clothing items available for exchange.
-Data: item name,description, category, size, condition, image url 
-Endpoints: 
-POST/items (list new clothing item available for swap) 
-GET/items (search for item)
-DELETE/items/{item_id} (remove an item) 
-GET/health (service health) 
+- **Backend framework:** FastAPI (async Python)
+- **Containerization:** Docker, Docker Compose
+- **API Gateway:** NGINX
+- **Caching / health data:** Redis
+- **Validation / models:** Pydantic
+- **Language:** Python
 
-swap-service: manages swap requests between users.
-Data:requester id, item requested, item offered,status
-Endpoints:
-POST/swaps (create new swap request)
-GET/swaps/{id}(check swap status)
-PUT/swaps/{id}/complete(mark swap completed)
-GET/health(health check)
+## Architecture
 
+### user-service
+Handles user registration and profile data.
 
-Prerequisites: 
-FASTAPI : asynch backend framework 
-DOCKER: containers 
-DOCKER COMPOSE: service orchestration 
-NGINX: API gateway
-REDIS:caching and health data storage 
-PYTHON :programming language 
-PYDANTIC: data validation/models
-POSTGRES: database 
+**Data model:** name, email, location, item preference
 
-Installation & Setup: 
+| Method | Endpoint | Description |
+|--------|----------|--------------|
+| `POST` | `/users` | Create a user profile |
+| `GET` | `/users/{user_id}` | Get details for a specific user |
+| `GET` | `/health` | Service health check |
 
-Clone repository: 
-git clone <your-repo-url> 
-cd fashion-swap
+### item-service
+Manages clothing items available for exchange.
 
-Build and start services with Docker: 
+**Data model:** item name, description, category, size, condition, image URL
+
+| Method | Endpoint | Description |
+|--------|----------|--------------|
+| `POST` | `/items` | List a new clothing item for swap |
+| `GET` | `/items` | Search available items |
+| `DELETE` | `/items/{item_id}` | Remove a listed item |
+| `GET` | `/health` | Service health check |
+
+### swap-service
+Manages swap requests between users.
+
+**Data model:** requester ID, item requested, item offered, status
+
+| Method | Endpoint | Description |
+|--------|----------|--------------|
+| `POST` | `/swaps` | Create a new swap request |
+| `GET` | `/swaps/{id}` | Check the status of a swap |
+| `PUT` | `/swaps/{id}/complete` | Mark a swap as completed |
+| `GET` | `/health` | Service health check |
+
+## Getting Started
+
+### Prerequisites
+
+- [Docker](https://www.docker.com/) and Docker Compose
+- Python 3.x (for local development outside containers)
+
+### Installation
+
+```bash
+git clone https://github.com/ellieelehmann/Sustainable-Fashion-Swapping.git
+cd Sustainable-Fashion-Swapping
+```
+
+### Build and Run
+
+```bash
 docker-compose up -d --build
+```
 
-Check all containers are running: 
-docker ps 
+Verify all containers are running:
 
-Clean up: 
+```bash
+docker ps
+```
+
+### Tearing Down
+
+```bash
 docker-compose down -v
 docker container prune -f
 docker volume prune -f
+```
 
+## API Documentation
 
-API Documentation: 
-Health Endpoints
+### Health Check Endpoints
 
-User-Serivce: 
-curl http://localhost:8000/health 
-
-Response: 
+**user-service**
+```bash
+curl http://localhost:8000/health
+```
+```json
 {
   "service": "user-service",
   "status": "healthy",
   "dependencies": {}
 }
+```
 
-Item-Service: 
+**item-service**
+```bash
 curl http://localhost:8001/health
-
-Response: 
+```
+```json
 {
   "service": "item-service",
   "status": "healthy",
@@ -88,12 +123,13 @@ Response:
     }
   }
 }
+```
 
-
-Swap-Serivce: 
+**swap-service**
+```bash
 curl http://localhost:8002/health
-
-Response: 
+```
+```json
 {
   "service": "swap-service",
   "status": "healthy",
@@ -104,70 +140,47 @@ Response:
     }
   }
 }
+```
 
+## Testing
 
-Test the system:
-run in terminal: 
+Manual service health checks:
 
-python3 test_system.py 
-
-NGINX API GATEWAY:
-Testing curl commands 
-curl -i http://localhost/
-curl -i http://localhost/users/health
-curl -i http://localhost/items/health
-curl -i http://localhost/swap/health
-
-docker exec -it api-gateway sh
-curl -i http://user-service:8000/health
-curl -i http://item-service:8000/health
-curl -i http://swap-service:8000/health
-
-docker exec -it api-gateway nginx -t
-docker logs api-gateway
-
-
-
-Testing: 
-Manual Testing: 
-Service Health: 
+```bash
 curl http://localhost:8000/health
 curl http://localhost:8001/health
 curl http://localhost:8002/health
+```
 
+## Project Structure
 
-Project Structure:
-
-MILESTONE1/
-│
-├── item-service/              
+```
+Sustainable-Fashion-Swapping/
+├── item-service/
 │   ├── app/
-│   │   ├── main.py               # FastAPI app entry point for item service
-│   │  
-│   ├── Dockerfile                # Builds the item service container
-│   └── requirements.txt         
+│   │   ├── main.py         # FastAPI entry point for the item service
+│   │   └── models.py       # Pydantic models and data schemas
+│   ├── Dockerfile          # Builds the item service container
+│   └── requirements.txt
 │
-├── swap-service/                 # Handles swap exchange logic between users
+├── swap-service/
 │   ├── app/
-│   │   ├── main.py               # FastAPI app entry point for swap service
-│   │ 
-│   ├── Dockerfile                # Builds the swap service container
-│   └── requirements.txt          # Python dependencies for the swap service
+│   │   ├── main.py         # FastAPI entry point for the swap service
+│   │   └── models.py       # Pydantic models for swap logic
+│   ├── Dockerfile          # Builds the swap service container
+│   └── requirements.txt
 │
-├── user-service/                 # Handles user registration and data
+├── user-service/
 │   ├── app/
-│   │   ├── main.py               # FastAPI app entry point for user service
-│   │   
-│   ├── Dockerfile                # Builds the user service container
-│   └── requirements.txt          # Python dependencies for the user service
-    |_______ start.sh              #starts the postgres db up and running
+│   │   ├── main.py         # FastAPI entry point for the user service
+│   │   └── models.py       # Pydantic models for user data
+│   ├── Dockerfile          # Builds the user service container
+│   └── requirements.txt
 │
-├── docker-compose.yml            # Orchestrates all three microservices
-│
-├── architecture-diagram.png      # Visual overview of the system architecture
-│
-│
-├── README.md                     # Project documentation and setup guide
-|----- nginx.conf                 #API Gateway and Loadbalancing of services 
-│
+├── docker-compose.yml          # Orchestrates all three microservices
+├── architecture-diagram.png    # Visual overview of the system architecture
+├── CODE_PROVENANCE.md          # AI usage disclosure
+├── README.md                   # Project documentation (this file)
+└── System Architecture Document.pdf   # Detailed system design report
+```
 
