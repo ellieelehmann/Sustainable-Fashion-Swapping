@@ -178,9 +178,6 @@ Sustainable-Fashion-Swapping/
 │   └── requirements.txt
 │
 ├── docker-compose.yml          # Orchestrates all three microservices
-├── architecture-diagram.png    # Visual overview of the system architecture
-├── CODE_PROVENANCE.md          # AI usage disclosure
 ├── README.md                   # Project documentation (this file)
-└── System Architecture Document.pdf   # Detailed system design report
 ```
 
