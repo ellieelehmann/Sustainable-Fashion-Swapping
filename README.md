@@ -178,6 +178,7 @@ Sustainable-Fashion-Swapping/
 │   └── requirements.txt
 │
 ├── docker-compose.yml          # Orchestrates all three microservices
-├── README.md                   # Project documentation (this file)
+├── nginx.conf                  # NGINX reverse proxy configuration
+├── test_system.py              # Automated script to test microservice endpoints
+└── README.md                   # Project documentation
 ```
-
